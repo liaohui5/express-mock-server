@@ -1,0 +1,17 @@
+{
+  "name": "mock-server",
+  "version": "0.0.1",
+  "main": "./server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "pm2 start ./server.js --watch --name mock-server",
+    "start": "pm2-runtime start ./pm2.config.cjs --env production",
+    "stop": "pm2 stop ./pm2.config.cjs"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mockjs": "^1.1.0",
+    "pm2": "^6.0.8"
+  }
+}

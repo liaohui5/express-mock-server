@@ -1,0 +1,9 @@
+---
+services:
+  express-mock-server:
+    build:
+      context: .
+      tags:
+        - express-mock-server
+    ports:
+      - 8000:8000
