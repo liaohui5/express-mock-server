@@ -1,7 +1,7 @@
+import { isString } from "./shared.js";
+
 const config = Object.freeze({
-  port: process.env.APP_PORT || 3000,
-  enableCors: true,
-  prefix: "/api",
+  // format reponse body
   success(res, data = null) {
     res.json({
       success: true,
@@ -9,19 +9,39 @@ const config = Object.freeze({
       data,
     });
   },
-  error(res, data = null) {
-    res.json({
+
+  // format reponse body
+  error(res, data = null, msg = "", statusCode = 200) {
+    res.status(statusCode).json({
       success: false,
-      msg: "error",
+      msg: msg || "error",
       data,
     });
   },
+
+  port: process.env.APP_PORT || 3000,
+  enableCors: true,
+  prefix: "/api",
+  accessTokenOpts: {
+    secret: "mock-access-token-secret",
+    options: {
+      algorithm: "HS256",
+      expiresIn: "60s",
+    },
+  },
+  refreshTokenOpts: {
+    secret: "mock-refresh-token-secret",
+    options: {
+      algorithm: "HS256",
+      expiresIn: "7d",
+    },
+  },
 });
 
-let isInitialized = false;
-export function initConfig(app) {
-  if (!isInitialized) {
-    app.set("config", config);
+export const getConfig = (keyPath) => {
+  if (isString(keyPath)) {
+    // TODO: support nested keyPath, use lodash: _.get(config, keyPath)
+    return config[keyPath];
   }
-  return app.get("config");
-}
+  return config;
+};

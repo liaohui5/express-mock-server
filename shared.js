@@ -1,6 +1,9 @@
-import * as z from "zod";
-import { initConfig } from "./config.js";
+import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+import z from "zod";
+import { getConfig } from "./config.js";
 
+export const $uuid = uuidv4;
 export const isSupportType = (v) => ["png", "svg"].includes(v);
 export const isString = (v) => typeof v === "string";
 export const isNumber = (v) => typeof v === "number";
@@ -16,52 +19,47 @@ export function createSVG(options) {
   return svg;
 }
 
-export function handleImagePlaceholderOpts(req, res, next) {
-  const config = initConfig(req.app);
-
-  const options = {
-    width: 600,
-    height: 400,
-    bg: "#dddddd",
-    color: "#888888",
-    text: "",
-    type: "svg", // svg or png
-  };
-
-  const colorZod = z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^([a-f0-9]{6}|[a-f0-9]{3})$/, "invalid color");
-
-  const queryZod = z.object({
-    w: z.number().min(10).max(2000).optional(),
-    h: z.number().min(10).max(2000).optional(),
-    bg: colorZod.optional(),
-    c: colorZod.optional(),
-    text: z.string().optional(),
-    type: z.enum(["png", "svg"]).default("svg"),
+// password must be equal to expectedPassword
+export function matchAccount(account, expectedPassword) {
+  const accountZod = z.object({
+    email: z.email(),
+    password: z.string().min(6, "password too short").max(32, "password too long"),
   });
 
-  // http://localhost:3000
-  // http://localhost:3000?w=400&h=200
-  // http://localhost:3000?w=400&h=200&c=888
-  // http://localhost:3000?w=400&h=200&c=888&bg=fff
-  const { query } = req;
-  if (isString(query.w)) query.w = parseInt(query.w);
-  if (isString(query.h)) query.h = parseInt(query.h);
-  const result = queryZod.safeParse(query);
+  const result = accountZod.safeParse(account);
   if (!result.success) {
-    return config.error(res, result.error);
+    return false;
   }
-  const { w, h, c, bg, text, type } = result.data;
-  if (isSupportType(type)) options.type = type;
-  if (isNumber(w)) options.width = w;
-  if (isNumber(h)) options.height = h;
-  if (isString(c)) options.color = `#${c}`;
-  if (isString(bg)) options.bg = `#${bg}`;
-  options.text = isString(text) ? text : `${options.width}x${options.height}`;
-
-  req.options = options;
-  next();
+  return result.data.password === expectedPassword;
 }
+
+// create token
+function createToken(account, opts) {
+  return jwt.sign(account, opts.secret, opts.options);
+}
+export const createAccessToken = (account) => createToken(account, getConfig("accessTokenOpts"));
+export const createRefreshToken = (account) => createToken(account, getConfig("refreshTokenOpts"));
+
+// verify token
+function verifyToken(token, opts) {
+  try {
+    jwt.verify(token, opts.secret, opts.options);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+export const verifyAccessToken = (accessToken) => verifyToken(accessToken, getConfig("accessTokenOpts"));
+export const verifyRefreshToken = (refreshToken) => verifyToken(refreshToken, getConfig("refreshTokenOpts"));
+
+// parseToken
+function parseToken(token, opts) {
+  try {
+    // exclude iat and exp field
+    const { iat, exp, ...rest } = jwt.verify(token, opts.secret, opts.options);
+    return rest;
+  } catch (e) {
+    return {};
+  }
+}
+export const parseRefreshToken = (token) => parseToken(token, getConfig("refreshTokenOpts"));
