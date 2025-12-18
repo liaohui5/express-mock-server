@@ -1,10 +1,13 @@
 import z from "zod";
-import { getConfig } from "./config.js";
-import { isNumber, isString, isSupportType, verifyAccessToken } from "./shared.js";
+import {
+  error,
+  isNumber,
+  isString,
+  isSupportType,
+  verifyAccessToken,
+} from "./shared.js";
 
 export function handleImagePlaceholderOpts(req, res, next) {
-  const config = getConfig();
-
   const options = {
     width: 600,
     height: 400,
@@ -38,7 +41,7 @@ export function handleImagePlaceholderOpts(req, res, next) {
   if (isString(query.h)) query.h = parseInt(query.h);
   const result = queryZod.safeParse(query);
   if (!result.success) {
-    return config.error(res, result.error);
+    return error(res, result.error);
   }
   const { w, h, c, bg, text, type } = result.data;
   if (isSupportType(type)) options.type = type;
@@ -53,16 +56,14 @@ export function handleImagePlaceholderOpts(req, res, next) {
 }
 
 export function auth(req, res, next) {
-  const config = getConfig();
-
   // must be have authorization header
   const { authorization } = req.headers;
   if (!authorization) {
-    return config.error(res, null, "please login first", 401);
+    return error(res, null, "please login first", 401);
   }
 
   if (!verifyAccessToken(authorization)) {
-    return config.error(res, null, "invalid access token or token expired", 401);
+    return error(res, null, "invalid access token or token expired", 401);
   }
 
   next();

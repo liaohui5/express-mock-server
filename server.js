@@ -6,6 +6,8 @@ import { getConfig } from "./config.js";
 import { auth, handleImagePlaceholderOpts } from "./middlewares.js";
 import {
   $uuid,
+  success,
+  error,
   createAccessToken,
   createRefreshToken,
   createSVG,
@@ -19,7 +21,6 @@ import {
 /////////////////////////////////////////////////
 const app = express();
 const config = getConfig();
-const { success, error } = config;
 const { mock } = Mock;
 
 // parse request body
@@ -98,7 +99,7 @@ app.get("/refresh-access-token", (req, res) => {
   const account = parseRefreshToken(refreshToken);
   const accessToken = createAccessToken(account); // renew accessToken
 
-  return success(res, accessToken);
+  return success(res, { accessToken });
 });
 
 app.get("/articles", auth, (_, res) => {

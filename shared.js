@@ -8,6 +8,24 @@ export const isSupportType = (v) => ["png", "svg"].includes(v);
 export const isString = (v) => typeof v === "string";
 export const isNumber = (v) => typeof v === "number";
 
+// format reponse body
+export function success(res, data = null) {
+  res.json({
+    success: true,
+    msg: "success",
+    data,
+  });
+}
+
+// format reponse body
+export function error(res, data = null, msg = "", statusCode = 200) {
+  res.status(statusCode).json({
+    success: false,
+    msg: msg || "error",
+    data,
+  });
+}
+
 export function createSVG(options) {
   const fontSize = Math.floor(Math.min(options.width, options.height) / 4);
   const svg = `
@@ -23,7 +41,10 @@ export function createSVG(options) {
 export function matchAccount(account, expectedPassword) {
   const accountZod = z.object({
     email: z.email(),
-    password: z.string().min(6, "password too short").max(32, "password too long"),
+    password: z
+      .string()
+      .min(6, "password too short")
+      .max(32, "password too long"),
   });
 
   const result = accountZod.safeParse(account);
@@ -37,8 +58,10 @@ export function matchAccount(account, expectedPassword) {
 function createToken(account, opts) {
   return jwt.sign(account, opts.secret, opts.options);
 }
-export const createAccessToken = (account) => createToken(account, getConfig("accessTokenOpts"));
-export const createRefreshToken = (account) => createToken(account, getConfig("refreshTokenOpts"));
+export const createAccessToken = (account) =>
+  createToken(account, getConfig("accessTokenOpts"));
+export const createRefreshToken = (account) =>
+  createToken(account, getConfig("refreshTokenOpts"));
 
 // verify token
 function verifyToken(token, opts) {
@@ -49,8 +72,10 @@ function verifyToken(token, opts) {
     return false;
   }
 }
-export const verifyAccessToken = (accessToken) => verifyToken(accessToken, getConfig("accessTokenOpts"));
-export const verifyRefreshToken = (refreshToken) => verifyToken(refreshToken, getConfig("refreshTokenOpts"));
+export const verifyAccessToken = (accessToken) =>
+  verifyToken(accessToken, getConfig("accessTokenOpts"));
+export const verifyRefreshToken = (refreshToken) =>
+  verifyToken(refreshToken, getConfig("refreshTokenOpts"));
 
 // parseToken
 function parseToken(token, opts) {
@@ -62,4 +87,5 @@ function parseToken(token, opts) {
     return {};
   }
 }
-export const parseRefreshToken = (token) => parseToken(token, getConfig("refreshTokenOpts"));
+export const parseRefreshToken = (token) =>
+  parseToken(token, getConfig("refreshTokenOpts"));
