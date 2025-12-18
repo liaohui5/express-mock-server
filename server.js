@@ -6,13 +6,13 @@ import { getConfig } from "./config.js";
 import { auth, handleImagePlaceholderOpts } from "./middlewares.js";
 import {
   $uuid,
-  success,
-  error,
   createAccessToken,
   createRefreshToken,
   createSVG,
+  error,
   matchAccount,
   parseRefreshToken,
+  success,
   verifyRefreshToken,
 } from "./shared.js";
 
@@ -21,6 +21,7 @@ import {
 /////////////////////////////////////////////////
 const app = express();
 const config = getConfig();
+const router = express.Router();
 const { mock } = Mock;
 
 // parse request body
@@ -32,7 +33,7 @@ if (config.enableCors) {
 }
 
 /////////////////////////////////////////////////
-//                  routes                     //
+//            app debug routes                 //
 /////////////////////////////////////////////////
 // for test server status
 app.get("/", (_, res) => success(res, "OK"));
@@ -64,73 +65,76 @@ app.get("/image-placeholder", handleImagePlaceholderOpts, (req, res) => {
   }
 });
 
-// login
-app.post("/login", (req, res) => {
-  const loginForm = req.body;
-  const expectedPassword = "e10adc3949ba59abbe56e057f20f883e";
-  const isMatched = matchAccount(loginForm, expectedPassword);
-  if (!isMatched) {
-    return error(res, null, "invalid email or password");
-  }
+/////////////////////////////////////////////////
+//                  api routes                 //
+/////////////////////////////////////////////////
+router
+  .post("/login", (req, res) => {
+    // login
+    const loginForm = req.body;
+    const expectedPassword = "e10adc3949ba59abbe56e057f20f883e";
+    const isMatched = matchAccount(loginForm, expectedPassword);
+    if (!isMatched) {
+      return error(res, null, "invalid email or password");
+    }
 
-  const mockProfile = {
-    id: $uuid(),
-    username: mock("@cname"),
-    email: mock("@email"),
-  };
+    const mockProfile = {
+      id: $uuid(),
+      username: mock("@cname"),
+      email: mock("@email"),
+    };
 
-  return success(res, {
-    ...mockProfile,
-    accessToken: createAccessToken(mockProfile),
-    refreshToken: createRefreshToken(mockProfile),
+    return success(res, {
+      ...mockProfile,
+      accessToken: createAccessToken(mockProfile),
+      refreshToken: createRefreshToken(mockProfile),
+    });
+  })
+  .get("/refresh-access-token", (req, res) => {
+    // refresh access token
+    const { refreshToken } = req.query;
+    if (!refreshToken) {
+      return error(res, null, "refresh token is required");
+    }
+    if (!verifyRefreshToken(refreshToken)) {
+      return error(res, null, "invalid refresh token or token expired");
+    }
+
+    const account = parseRefreshToken(refreshToken);
+    const accessToken = createAccessToken(account); // renew accessToken
+
+    return success(res, { accessToken });
+  })
+  .get("/articles", auth, (_, res) => {
+    const articles = mock({
+      page: 1,
+      size: 10,
+      "rows|10": [
+        {
+          id: "@id",
+          title: "@ctitle",
+          contents: "@cparagraph",
+        },
+      ],
+    });
+
+    success(res, articles);
+  })
+  .patch("/article/:id", auth, (req, res) => {
+    // for patch/put example
+    success(res, {
+      id: req.params.id,
+    });
+  })
+  .delete("/article/:id", auth, (req, res) => {
+    // for delete example
+    success(res, {
+      id: req.params.id,
+    });
   });
-});
 
-// refresh access token
-app.get("/refresh-access-token", (req, res) => {
-  const { refreshToken } = req.query;
-  if (!refreshToken) {
-    return error(res, null, "refresh token is required");
-  }
-  if (!verifyRefreshToken(refreshToken)) {
-    return error(res, null, "invalid refresh token or token expired");
-  }
-
-  const account = parseRefreshToken(refreshToken);
-  const accessToken = createAccessToken(account); // renew accessToken
-
-  return success(res, { accessToken });
-});
-
-app.get("/articles", auth, (_, res) => {
-  const articles = mock({
-    page: 1,
-    size: 10,
-    "rows|10": [
-      {
-        id: "@id",
-        title: "@ctitle",
-        contents: "@cparagraph",
-      },
-    ],
-  });
-
-  success(res, articles);
-});
-
-// for patch/put example
-app.patch("/article/:id", auth, (req, res) => {
-  success(res, {
-    id: req.params.id,
-  });
-});
-
-// for delete example
-app.delete("/article/:id", auth, (req, res) => {
-  success(res, {
-    id: req.params.id,
-  });
-});
+// apply router to app
+app.use(config.prefix, router);
 
 // global error handler
 app.use((err, _req, res, _next) => {
