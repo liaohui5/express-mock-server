@@ -1,6 +1,9 @@
 import cors from "cors";
 import express from "express";
 import Mock from "mockjs";
+import sharp from "sharp";
+import { initConfig } from "./config.js";
+import { createSVG, handleImagePlaceholderOpts } from "./shared.js";
 
 const { mock } = Mock;
 
@@ -8,25 +11,8 @@ const { mock } = Mock;
 //                 init app                    //
 /////////////////////////////////////////////////
 const app = express();
-const config = Object.freeze({
-  port: process.env.APP_PORT || 3000,
-  enableCors: true,
-  prefix: "/api",
-  success(res, data = null) {
-    res.json({
-      success: true,
-      msg: "success",
-      data,
-    });
-  },
-  error(res, data = null) {
-    res.json({
-      success: false,
-      msg: "error",
-      data,
-    });
-  },
-});
+const config = initConfig(app);
+const { success, error } = config;
 
 // parse request body
 app.use(express.json({ extended: true }));
@@ -39,8 +25,25 @@ if (config.enableCors) {
 /////////////////////////////////////////////////
 //                  routes                     //
 /////////////////////////////////////////////////
-const { success, error } = config;
 app.get("/", (_, res) => success(res, "OK"));
+
+// image-placeholder
+app.get("/image-placeholder", handleImagePlaceholderOpts, (req, res) => {
+  if (req.options.type === "png") {
+    // response a png file
+    res.type("png");
+    res.setHeader("Content-Disposition", 'inline; filename="placeholder.png"');
+    sharp(Buffer.from(createSVG(req.options)))
+      .png({ quality: 50 })
+      .pipe(res);
+  } else {
+    // response a svg
+    res.type("svg");
+    res.setHeader("Content-Disposition", `inline; filename="placeholder.svg"`);
+    res.send(createSVG(req.options));
+  }
+});
+
 app.get("/articles", (_, res) => {
   const articles = mock({
     page: 1,
