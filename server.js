@@ -1,11 +1,11 @@
 import cors from "cors";
 import express from "express";
-import Mock from "mockjs";
 import sharp from "sharp";
+import { zocker } from "zocker";
+import z from "zod";
 import { getConfig } from "./config.js";
 import { auth, handleImagePlaceholderOpts } from "./middlewares.js";
 import {
-  $uuid,
   createAccessToken,
   createRefreshToken,
   createSVG,
@@ -22,7 +22,6 @@ import {
 const app = express();
 const config = getConfig();
 const router = express.Router();
-const { mock } = Mock;
 
 // parse request body
 app.use(express.json({ extended: true }));
@@ -78,11 +77,13 @@ router
       return error(res, null, "invalid email or password");
     }
 
-    const mockProfile = {
-      id: $uuid(),
-      username: mock("@cname"),
-      email: mock("@email"),
-    };
+    const mockProfile = zocker(
+      z.object({
+        id: z.uuid(),
+        username: z.string(),
+        email: z.string(),
+      }),
+    ).generate();
 
     return success(res, {
       ...mockProfile,
@@ -107,20 +108,17 @@ router
   })
   .get("/articles", auth, (_, res) => {
     // for get articles example
-    const articles = mock({
-      total: 50,
-      "datas|10": [
-        {
-          id: "@id",
-          title: "@ctitle",
-          author: "@cname",
-          content: "@cparagraph",
-          createdAt: "@datetime",
-          updatedAt: "@datetime",
-        },
-      ],
-    });
-    success(res, articles);
+    const datas = zocker(
+      z.object({
+        id: z.uuid(),
+        title: z.string(),
+        author: z.string(),
+        content: z.string(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+    ).generate(10);
+    success(res, { total: 50, datas });
   })
   .post("/articles", auth, (req, res) => {
     // for patch/put example
