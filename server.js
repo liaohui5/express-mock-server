@@ -117,7 +117,7 @@ router
         createdAt: z.date(),
         updatedAt: z.date(),
       }),
-    ).generate(10);
+    ).generateMany(10);
     success(res, { total: 50, datas });
   })
   .post("/articles", auth, (req, res) => {
