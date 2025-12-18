@@ -90,7 +90,7 @@ router
       refreshToken: createRefreshToken(mockProfile),
     });
   })
-  .get("/refresh-access-token", (req, res) => {
+  .get("/refresh_access_token", (req, res) => {
     // refresh access token
     const { refreshToken } = req.query;
     if (!refreshToken) {
@@ -106,31 +106,33 @@ router
     return success(res, { accessToken });
   })
   .get("/articles", auth, (_, res) => {
+    // for get articles example
     const articles = mock({
-      page: 1,
-      size: 10,
-      "rows|10": [
+      total: 50,
+      "datas|10": [
         {
           id: "@id",
           title: "@ctitle",
-          contents: "@cparagraph",
+          author: "@cname",
+          content: "@cparagraph",
+          createdAt: "@datetime",
+          updatedAt: "@datetime",
         },
       ],
     });
-
     success(res, articles);
   })
-  .patch("/article/:id", auth, (req, res) => {
+  .post("/articles", auth, (req, res) => {
     // for patch/put example
-    success(res, {
-      id: req.params.id,
-    });
+    success(res, req.body);
   })
-  .delete("/article/:id", auth, (req, res) => {
+  .patch("/articles/:id", auth, (req, res) => {
+    // for patch/put example
+    success(res, { id: req.params.id });
+  })
+  .delete("/articles/:id", auth, (req, res) => {
     // for delete example
-    success(res, {
-      id: req.params.id,
-    });
+    success(res, { id: req.params.id });
   });
 
 // apply router to app
