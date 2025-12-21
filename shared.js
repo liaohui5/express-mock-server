@@ -38,8 +38,8 @@ export function createSVG(options) {
 // password must be equal to expectedPassword
 export function matchAccount(account, expectedPassword) {
   const accountZod = z.object({
-    email: z.email(),
-    password: z.string().min(6, "password too short").max(32, "password too long"),
+    account: z.email(),
+    password: z.string().min(6, "password too short"),
   });
 
   const result = accountZod.safeParse(account);
