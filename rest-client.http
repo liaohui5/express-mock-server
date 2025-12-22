@@ -1,0 +1,30 @@
+### kulala-variables
+
+@host = localhost
+@port = 3000
+
+
+### ping
+
+GET http://{{host}}:{{port}}/ HTTP/1.1
+Accept: application/json
+
+
+### LOGIN_REQ
+
+POST http://{{host}}:{{port}}/api/login HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "account": "admin@example.com",
+  "password": "e10adc3949ba59abbe56e057f20f883e"
+}
+
+
+### articles
+
+GET http://{{host}}:{{port}}/api/articles HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+Authorization: {{LOGIN_REQ.response.body.$.data.accessToken}}
