@@ -121,7 +121,7 @@ router
     success(res, { total: 50, datas });
   })
   .post("/articles", auth, (req, res) => {
-    // for patch/put example
+    // for post example
     success(res, req.body);
   })
   .patch("/articles/:id", auth, (req, res) => {
