@@ -1,11 +1,5 @@
 import z from "zod";
-import {
-  error,
-  isNumber,
-  isString,
-  isSupportType,
-  verifyAccessToken,
-} from "./shared.js";
+import { error, isNumber, isString, isSupportType, verifyAccessToken } from "./shared.js";
 
 export function handleImagePlaceholderOpts(req, res, next) {
   const options = {
@@ -62,7 +56,9 @@ export function auth(req, res, next) {
     return error(res, null, "please login first", 401);
   }
 
-  if (!verifyAccessToken(authorization)) {
+  // Bearer aaa.bbb.ccc
+  const accessToken = authorization.slice(7);
+  if (!verifyAccessToken(accessToken)) {
     return error(res, null, "invalid access token or token expired", 401);
   }
 
