@@ -8,7 +8,7 @@ const config = Object.freeze({
     secret: "mock-access-token-secret",
     options: {
       algorithm: "HS256",
-      expiresIn: "60s",
+      expiresIn: "10s",
     },
   },
   refreshTokenOpts: {

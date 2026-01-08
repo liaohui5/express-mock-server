@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "express-mock-server", // 启动时的名称
-      script: "./server.js",       // 执行的脚本
+      script: "./src/server.js",   // 执行的脚本
       cwd: ".",                    // 执行的工作目录
       watch: false,                // 是否监听文件变化并重启
       instances: 1,                // 需要启动多少个实例(多进程负载均衡)

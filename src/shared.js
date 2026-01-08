@@ -36,25 +36,31 @@ export function createSVG(options) {
 }
 
 // password must be equal to expectedPassword
-export function matchAccount(account, expectedPassword) {
+export function matchAccount(account) {
   const accountZod = z.object({
     account: z.email(),
     password: z.string().min(6, "password too short"),
   });
 
-  const result = accountZod.safeParse(account);
-  if (!result.success) {
-    return false;
-  }
-  return result.data.password === expectedPassword;
+  return accountZod.safeParse(account).success;
+}
+
+export function parsePagination(query) {
+  const paginationZod = z.object({
+    page: z.string().refine(Number).min(1).default(1).optional(),
+    limit: z.string().refine(Number).min(1).max(100).default(10).optional(),
+  });
+  return paginationZod.safeParse(query).data;
 }
 
 // create token
 function createToken(account, opts) {
   return jwt.sign(account, opts.secret, opts.options);
 }
-export const createAccessToken = (account) => createToken(account, getConfig("accessTokenOpts"));
-export const createRefreshToken = (account) => createToken(account, getConfig("refreshTokenOpts"));
+export const createAccessToken = (account) =>
+  createToken(account, getConfig("accessTokenOpts"));
+export const createRefreshToken = (account) =>
+  createToken(account, getConfig("refreshTokenOpts"));
 
 // verify token
 function verifyToken(token, opts) {
@@ -65,8 +71,10 @@ function verifyToken(token, opts) {
     return false;
   }
 }
-export const verifyAccessToken = (accessToken) => verifyToken(accessToken, getConfig("accessTokenOpts"));
-export const verifyRefreshToken = (refreshToken) => verifyToken(refreshToken, getConfig("refreshTokenOpts"));
+export const verifyAccessToken = (accessToken) =>
+  verifyToken(accessToken, getConfig("accessTokenOpts"));
+export const verifyRefreshToken = (refreshToken) =>
+  verifyToken(refreshToken, getConfig("refreshTokenOpts"));
 
 // parseToken
 function parseToken(token, opts) {
@@ -78,4 +86,5 @@ function parseToken(token, opts) {
     return {};
   }
 }
-export const parseRefreshToken = (token) => parseToken(token, getConfig("refreshTokenOpts"));
+export const parseRefreshToken = (token) =>
+  parseToken(token, getConfig("refreshTokenOpts"));

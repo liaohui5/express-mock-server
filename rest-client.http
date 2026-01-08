@@ -27,4 +27,4 @@ Content-Type: application/json
 GET http://{{host}}:{{port}}/api/articles HTTP/1.1
 Accept: application/json
 Content-Type: application/json
-Authorization: {{LOGIN_REQ.response.body.$.data.accessToken}}
+Authorization: Bearer {{LOGIN_REQ.response.body.$.data.accessToken}}

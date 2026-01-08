@@ -1,6 +1,0 @@
-[tools]
-node = "24"
-
-[tasks]
-dev = "watchexec -e js,json -i node_modules -w . -r 'node ./server.js'"
-start = "node ./server.js"
